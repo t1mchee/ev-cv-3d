@@ -103,7 +103,7 @@ export function sampleSurface(p: Params): { x: number[]; y: number[]; z: number[
 }
 
 // Apply a monotonic transformation f: ℝ → ℝ to every z. Contours at f(U*) levels
-// still live at the same x1,x2 points — that's the ordinality point.
+// still live at the same x1,x2 points. That is the ordinality point.
 export function applyTransformation(
   z: number[][], t: Transformation,
 ): number[][] {

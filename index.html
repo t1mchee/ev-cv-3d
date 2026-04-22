@@ -3,7 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Utility Surface — 3D View</title>
+    <title>Utility Surface</title>
+    <!-- MathJax 3 loaded globally so the MathSpan helper in ./src/Math.tsx
+         can typeset inline TeX. Plotly labels use Unicode and do not
+         depend on MathJax. -->
+    <script>
+      window.MathJax = {
+        tex: { inlineMath: [['\\(', '\\)']] },
+        svg: { fontCache: 'global' },
+        startup: { typeset: false },
+      };
+    </script>
+    <script
+      id="MathJax-script"
+      async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"
+    ></script>
   </head>
   <body>
     <div id="root"></div>

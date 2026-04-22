@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { MathSpan } from './Math';
 import UtilitySurface from './components/UtilitySurface';
 import Controls from './components/Controls';
 import type { Params } from './types';
@@ -17,9 +18,11 @@ export default function App() {
           padding: '24px 32px',
         }}
       >
-        <h1 style={{ fontSize: 26, fontWeight: 700 }}>Utility Surface — 3D</h1>
+        <h1 style={{ fontSize: 26, fontWeight: 700 }}>Utility Surface</h1>
         <p style={{ fontSize: 14, opacity: 0.9, marginTop: 4 }}>
-          Indifference curves as level sets of U(x₁, x₂). Rotate · zoom · hover.
+          <MathSpan>
+            {'Indifference curves as level sets of \\(U(x_1, x_2)\\). Rotate, zoom, hover.'}
+          </MathSpan>
         </p>
       </header>
 
@@ -45,10 +48,11 @@ export default function App() {
         >
           <UtilitySurface params={params} />
           <div style={{ fontSize: 12, color: '#6b7280', padding: '8px 12px 4px', lineHeight: 1.5 }}>
-            The coloured hill is <b>U(x₁, x₂)</b>. Horizontal slices are
-            indifference curves — <i>contours</i> of the same hill.
-            The red dot is the utility-maximising bundle on the budget plane;
-            its projection on the floor is the standard 2D optimum.
+            <MathSpan>
+              {'The coloured hill is \\(U(x_1, x_2)\\). Horizontal slices are indifference curves, '
+                + 'the contours of that same hill. The red dot is the utility-maximising bundle '
+                + 'on the budget plane; its projection on the floor is the standard 2D optimum.'}
+            </MathSpan>
           </div>
         </div>
 
@@ -58,7 +62,7 @@ export default function App() {
       </div>
 
       <footer style={{ padding: 16, textAlign: 'center', fontSize: 12, color: '#6b7280' }}>
-        Companion to the 2D EV/CV/DWL visualisation.
+        Companion to the 2D EV / CV / DWL visualisation.
       </footer>
     </div>
   );

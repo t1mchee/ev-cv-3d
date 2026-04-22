@@ -10,7 +10,7 @@ the 2D EV / CV / DWL visualisation at
 
 - The utility function as a coloured surface (hill)
 - Indifference curves as horizontal level sets lifted onto the surface
-- Those same contours projected onto the floor — the "standard" 2D diagram
+- Those same contours projected onto the floor, the "standard" 2D diagram
 - Budget constraint as a translucent vertical curtain; its floor trace is the
   usual budget line
 - Marshallian optimum A* at the highest IC tangent to the budget, with a stem

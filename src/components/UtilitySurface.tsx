@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-// @ts-expect-error — plotly.js-dist-min ships no bundled types
+// @ts-expect-error - plotly.js-dist-min ships no bundled types
 import Plotly from 'plotly.js-dist-min';
 import type { Params } from '../types';
 import {
@@ -62,7 +62,7 @@ export default function UtilitySurface({ params }: Props) {
                 },
               }
             : undefined,
-        hovertemplate: 'x₁=%{x:.1f}<br>x₂=%{y:.1f}<br>z=%{z:.2f}<extra></extra>',
+        hovertemplate: 'x\u2081=%{x:.1f}<br>x\u2082=%{y:.1f}<br>z=%{z:.2f}<extra></extra>',
       });
     } else if (params.mode === 'surface' && params.surface.showContourFloor) {
       // Even without the surface, show the floor contour projection so the 2D
@@ -100,7 +100,7 @@ export default function UtilitySurface({ params }: Props) {
     }
 
     // Top-down 2D snap: look straight down the z-axis, orthographic projection,
-    // with x₁ right and x₂ up — this matches the canonical textbook diagram.
+    // with x1 right and x2 up. Matches the canonical textbook diagram.
     const camera2D = {
       eye: { x: 0, y: 0, z: 2.3 },
       up: { x: 0, y: 1, z: 0 },
@@ -118,10 +118,10 @@ export default function UtilitySurface({ params }: Props) {
       title: { text: titleFor(params), font: { size: 16 } },
       margin: { l: 0, r: 0, b: 0, t: 40 },
       scene: {
-        xaxis: { title: { text: 'x₁' }, range: [0, params.extent], gridcolor: '#e5e7eb' },
-        yaxis: { title: { text: 'x₂' }, range: [0, params.extent], gridcolor: '#e5e7eb' },
+        xaxis: { title: { text: 'x\u2081' }, range: [0, params.extent], gridcolor: '#e5e7eb' },
+        yaxis: { title: { text: 'x\u2082' }, range: [0, params.extent], gridcolor: '#e5e7eb' },
         zaxis: {
-          title: { text: params.mode === 'ordinality' ? 'f(U)' : 'U(x₁, x₂)' },
+          title: { text: params.mode === 'ordinality' ? 'f(U)' : 'U(x\u2081, x\u2082)' },
           gridcolor: '#e5e7eb',
           visible: params.viewMode === '3d',
         },
@@ -141,12 +141,13 @@ export default function UtilitySurface({ params }: Props) {
 function titleFor(p: Params): string {
   const base = p.utilityType === 'cobb-douglas' ? 'Cobb-Douglas' : 'CES';
   switch (p.mode) {
-    case 'surface': return `Utility surface — ${base}`;
-    case 'slutsky': return `Slutsky decomposition — ${base}`;
-    case 'hicksian': return `Hicksian demand: bundle slides along contour`;
-    case 'marshallian': return `Marshallian path as ${p.marshallian.varyBy === 'p1' ? 'p₁' : 'income'} varies`;
-    case 'ordinality': return `Ordinality: contours are invariant under f(U)`;
-    case 'evcv': return `CV and EV as parallel budget-curtain shifts`;
+    case 'surface': return `Utility surface: ${base}`;
+    case 'slutsky': return `Slutsky decomposition: ${base}`;
+    case 'hicksian': return 'Hicksian demand: bundle slides along contour';
+    case 'marshallian':
+      return `Marshallian path as ${p.marshallian.varyBy === 'p1' ? 'p\u2081' : 'm'} varies`;
+    case 'ordinality': return 'Ordinality: contours are invariant under f(U)';
+    case 'evcv': return 'CV and EV as parallel budget-curtain shifts';
   }
 }
 
@@ -239,7 +240,7 @@ function renderSurfaceMode(
       marker: { size: 6, color: COLOR.postTax },
       text: ['A*'], textposition: 'top center',
       textfont: { size: 14, color: COLOR.postTax },
-      hovertemplate: 'A*<br>x₁=%{x:.2f}<br>x₂=%{y:.2f}<br>U=%{z:.2f}<extra></extra>',
+      hovertemplate: 'A*<br>x\u2081=%{x:.2f}<br>x\u2082=%{y:.2f}<br>U=%{z:.2f}<extra></extra>',
     });
     // stem
     traces.push({
@@ -283,7 +284,7 @@ function renderSlutsky(traces: unknown[], p: Params): void {
   if (o.showPostTaxBudget)
     renderBudgetCurtain(traces, q1, p.p2, p.income, zTop, COLOR.postTax, 0.14);
   if (o.showHicksianBudget) {
-    // Compensated: same slope as post-tax but tangent to U₀
+    // Compensated: same slope as post-tax but tangent to U_0.
     const incCV = expenditureAt(p, q1, p.p2, U0);
     renderBudgetCurtain(traces, q1, p.p2, incCV, zTop, COLOR.sub, 0.14, 'dash');
   }
@@ -291,17 +292,15 @@ function renderSlutsky(traces: unknown[], p: Params): void {
   if (o.showBundles) {
     dotLabel(traces, A.x1, A.x2, U0, 'A', COLOR.preTax);
     dotLabel(traces, H.x1, H.x2, U0, 'H', COLOR.sub);
-    dotLabel(traces, tildeA.x1, tildeA.x2, U1, 'Ã', COLOR.postTax);
+    dotLabel(traces, tildeA.x1, tildeA.x2, U1, 'A\u0303', COLOR.postTax);
   }
 
   if (o.showSubArrow) {
-    // Slide along U₀ contour from A to H. We walk along the contour parameterized by x₁.
+    // Slide along the U_0 contour from A to H, parameterised by x_1.
     addContourSegment(traces, p, U0, A.x1, H.x1, COLOR.sub, 5);
   }
   if (o.showIncArrow) {
-    // Vertical drop H (at U₀) → (H.x1, H.x2, U1 location on floor). Actually the income
-    // effect shifts from the H bundle to Ã (both at post-tax prices, income differs).
-    // Best drawn as a segment from (H, U₀) down and across to (Ã, U₁).
+    // Income effect: from H (at U_0) to tilde-A (at U_1), at post-tax prices.
     traces.push({
       type: 'scatter3d', mode: 'lines',
       x: [H.x1, tildeA.x1], y: [H.x2, tildeA.x2], z: [U0, U1],
@@ -349,7 +348,7 @@ function renderHicksian(traces: unknown[], p: Params): void {
 
   // Current bundle
   const hNow = hicksianAt(p, o.currentP1, p.p2, uBar);
-  dotLabel(traces, hNow.x1, hNow.x2, uBar, `H(p₁=${o.currentP1.toFixed(2)})`, COLOR.postTax);
+  dotLabel(traces, hNow.x1, hNow.x2, uBar, `H(p\u2081=${o.currentP1.toFixed(2)})`, COLOR.postTax);
 
   // Show the compensated budget that achieves exactly U̅ at the current p₁.
   const inc = expenditureAt(p, o.currentP1, p.p2, uBar);
@@ -392,7 +391,11 @@ function renderMarshallianMode(
     o.varyBy === 'p1'
       ? marshallianAt(p, o.currentValue, p.p2, p.income)
       : marshallianAt(p, p.p1, p.p2, o.currentValue);
-  dotLabel(traces, now.x1, now.x2, now.u, `A*(${o.varyBy}=${o.currentValue.toFixed(2)})`, COLOR.postTax);
+  dotLabel(
+    traces, now.x1, now.x2, now.u,
+    `A*(${o.varyBy === 'p1' ? 'p\u2081' : 'm'}=${o.currentValue.toFixed(2)})`,
+    COLOR.postTax,
+  );
 
   // Current budget curtain
   if (o.varyBy === 'p1') {
@@ -434,7 +437,7 @@ function renderOrdinality(traces: unknown[], p: Params): void {
       line: { color: 'rgba(239,68,68,0.85)', width: 3 },
       showlegend: false, hoverinfo: 'skip',
     });
-    // Floor projections are the SAME for every f — that's the point.
+    // Floor projections are the SAME for every f. That is the point.
     traces.push({
       type: 'scatter3d', mode: 'lines',
       x: xs, y: ys, z: xs.map(() => 0),
@@ -473,8 +476,8 @@ function renderEVCV(traces: unknown[], p: Params, _zMax: number): void {
   if (o.showCVCurtain)
     renderBudgetCurtain(traces, q1, p.p2, mCV, zTop, '#ef4444', 0.14, 'dash');
 
-  if (o.showBundleA) dotLabel(traces, A.x1, A.x2, U0, 'A', COLOR.preTax);
-  if (o.showBundleTildeA) dotLabel(traces, tildeA.x1, tildeA.x2, U1, 'Ã', COLOR.postTax);
+  if (o.showBundleA) dotLabel(traces, A.x1, A.x2, U0, '$A$', COLOR.preTax);
+  if (o.showBundleTildeA) dotLabel(traces, tildeA.x1, tildeA.x2, U1, '$\\tilde A$', COLOR.postTax);
 
   if (o.showBrackets) {
     // Show the two incomes as text anchored at the y-axis intercepts of each curtain.
@@ -489,8 +492,8 @@ function renderEVCV(traces: unknown[], p: Params, _zMax: number): void {
       });
     };
     bracket(p.income / p.p2, COLOR.preTax, `m = ${p.income.toFixed(0)}`, -2);
-    bracket(mCV / p.p2, '#ef4444', `m+CV = ${mCV.toFixed(1)}`, -2);
-    bracket(mEV / p.p2, COLOR.compensated, `m−EV = ${mEV.toFixed(1)}`, -2);
+    bracket(mCV / p.p2, '#ef4444', `m + CV = ${mCV.toFixed(1)}`, -2);
+    bracket(mEV / p.p2, COLOR.compensated, `m - EV = ${mEV.toFixed(1)}`, -2);
   }
 }
 
@@ -505,7 +508,7 @@ function dotLabel(
     marker: { size: 6, color },
     text: [label], textposition: 'top center',
     textfont: { size: 14, color },
-    hovertemplate: `${label}<br>x₁=%{x:.2f}<br>x₂=%{y:.2f}<br>U=%{z:.2f}<extra></extra>`,
+    hovertemplate: `${label}<br>x\u2081=%{x:.2f}<br>x\u2082=%{y:.2f}<br>U=%{z:.2f}<extra></extra>`,
   });
 }
 
