@@ -143,13 +143,49 @@ export default function UtilitySurface({ params }: Props) {
 
     // Optimal bundle: a marker ball at the tangency and a vertical stem up to U*.
     if (params.showOptimalBundle) {
+      // Indifference curve passing through A* — drawn bright so the viewer can
+      // track which level set A is on as parameters change.
+      {
+        const xs: number[] = [];
+        const ys: number[] = [];
+        const zs: number[] = [];
+        const numSamples = 120;
+        for (let i = 1; i <= numSamples; i++) {
+          const x1 = (params.extent * i) / numSamples;
+          const x2 = solveX2ForUtility(x1, bundle.u, params);
+          if (x2 != null && x2 > 0 && x2 <= params.extent) {
+            xs.push(x1);
+            ys.push(x2);
+            zs.push(bundle.u);
+          }
+        }
+        traces.push({
+          type: 'scatter3d',
+          mode: 'lines',
+          x: xs, y: ys, z: zs,
+          line: { color: '#ef4444', width: 5 },
+          name: 'IC at A*',
+          hovertemplate: `IC at U=${bundle.u.toFixed(2)}<extra></extra>`,
+        });
+
+        // Same IC projected on the floor so the 2D shadow is also highlighted.
+        traces.push({
+          type: 'scatter3d',
+          mode: 'lines',
+          x: xs, y: ys, z: xs.map(() => 0),
+          line: { color: '#ef4444', width: 2, dash: 'dot' },
+          showlegend: false,
+          hoverinfo: 'skip',
+        });
+      }
+
       traces.push({
         type: 'scatter3d',
         mode: 'markers+text',
         x: [bundle.x1],
         y: [bundle.x2],
         z: [bundle.u],
-        marker: { size: 6, color: '#ef4444', line: { color: 'white', width: 1 } },
+        marker: { size: 6, color: '#ef4444' },
         text: ['A*'],
         textposition: 'top center',
         textfont: { size: 14, color: '#ef4444' },
@@ -170,14 +206,13 @@ export default function UtilitySurface({ params }: Props) {
         hoverinfo: 'skip',
       });
 
-      // Ground projection of the optimal bundle
       traces.push({
         type: 'scatter3d',
         mode: 'markers',
         x: [bundle.x1],
         y: [bundle.x2],
         z: [0],
-        marker: { size: 4, color: '#ef4444', symbol: 'circle' },
+        marker: { size: 4, color: '#ef4444' },
         showlegend: false,
         hoverinfo: 'skip',
       });
