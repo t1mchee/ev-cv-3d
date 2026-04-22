@@ -43,27 +43,36 @@ export default function UtilitySurface({ params }: Props) {
 
     const traces: unknown[] = [];
 
-    // Main surface. In ordinality mode the contour levels are tied to the raw U
-    // (not f(U)) — but Plotly contours run off the actual z; so we compute
-    // contours manually via projected isolines in that mode.
-    traces.push({
-      type: 'surface',
-      x: surf.x, y: surf.y, z,
-      colorscale: 'Viridis',
-      opacity: params.mode === 'ordinality' ? 0.9 : 0.95,
-      showscale: false,
-      contours:
-        params.mode === 'surface' && params.surface.showContourFloor
-          ? {
-              z: {
-                show: true, usecolormap: true, project: { z: true },
-                start: zMax * 0.05, end: zMax,
-                size: (zMax - zMax * 0.05) / Math.max(1, params.surface.isolineCount),
-              },
-            }
-          : undefined,
-      hovertemplate: 'x₁=%{x:.1f}<br>x₂=%{y:.1f}<br>z=%{z:.2f}<extra></extra>',
-    });
+    // Main surface (guarded). Contour projection uses Plotly's built-in only in
+    // the Surface mode; other modes draw their own isolines.
+    if (params.showSurface) {
+      traces.push({
+        type: 'surface',
+        x: surf.x, y: surf.y, z,
+        colorscale: 'Viridis',
+        opacity: params.mode === 'ordinality' ? 0.9 : 0.95,
+        showscale: false,
+        contours:
+          params.mode === 'surface' && params.surface.showContourFloor
+            ? {
+                z: {
+                  show: true, usecolormap: true, project: { z: true },
+                  start: zMax * 0.05, end: zMax,
+                  size: (zMax - zMax * 0.05) / Math.max(1, params.surface.isolineCount),
+                },
+              }
+            : undefined,
+        hovertemplate: 'x₁=%{x:.1f}<br>x₂=%{y:.1f}<br>z=%{z:.2f}<extra></extra>',
+      });
+    } else if (params.mode === 'surface' && params.surface.showContourFloor) {
+      // Even without the surface, show the floor contour projection so the 2D
+      // contour map remains visible.
+      const start = zMax * 0.05;
+      const step = (zMax - start) / Math.max(1, params.surface.isolineCount);
+      const levels: number[] = [];
+      for (let k = 1; k <= params.surface.isolineCount; k++) levels.push(start + k * step);
+      renderIsolinesAt(traces, params, levels, 'rgba(17,24,39,0.35)', 1.5, false);
+    }
 
     const bundle = marshallianBundle(params);
 
@@ -90,6 +99,21 @@ export default function UtilitySurface({ params }: Props) {
         break;
     }
 
+    // Top-down 2D snap: look straight down the z-axis, orthographic projection,
+    // with x₁ right and x₂ up — this matches the canonical textbook diagram.
+    const camera2D = {
+      eye: { x: 0, y: 0, z: 2.3 },
+      up: { x: 0, y: 1, z: 0 },
+      center: { x: 0, y: 0, z: 0 },
+      projection: { type: 'orthographic' },
+    };
+    const camera3D = {
+      eye: { x: 1.5, y: -1.6, z: 0.9 },
+      up: { x: 0, y: 0, z: 1 },
+      center: { x: 0, y: 0, z: 0 },
+      projection: { type: 'perspective' },
+    };
+
     const layout = {
       title: { text: titleFor(params), font: { size: 16 } },
       margin: { l: 0, r: 0, b: 0, t: 40 },
@@ -99,8 +123,9 @@ export default function UtilitySurface({ params }: Props) {
         zaxis: {
           title: { text: params.mode === 'ordinality' ? 'f(U)' : 'U(x₁, x₂)' },
           gridcolor: '#e5e7eb',
+          visible: params.viewMode === '3d',
         },
-        camera: { eye: { x: 1.5, y: -1.6, z: 0.9 } },
+        camera: params.viewMode === '2d' ? camera2D : camera3D,
         aspectmode: 'cube',
       },
       paper_bgcolor: '#ffffff',
@@ -154,6 +179,9 @@ function renderBudgetCurtain(
   traces: unknown[], p1: number, p2: number, income: number,
   zTop: number, color: string, opacity: number, dash = 'solid',
 ): void {
+  // The raw opacity is the caller's hint; we boost it to make curtains read
+  // clearly against the Viridis surface. Feel free to re-tune.
+  opacity = Math.min(0.65, opacity + 0.25);
   const xEnd = income / p1;
   const yStart = income / p2;
   const n = 30;

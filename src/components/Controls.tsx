@@ -44,6 +44,40 @@ const hint: React.CSSProperties = {
 export default function Controls({ params, onChange }: Props) {
   return (
     <div>
+      {/* View controls — applies across all modes */}
+      <div style={section}>
+        <div style={header}>View</div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+          {(['3d', '2d'] as const).map(v => (
+            <button
+              key={v}
+              onClick={() => onChange({ viewMode: v })}
+              style={{
+                flex: 1, padding: '6px 10px', fontSize: 12, cursor: 'pointer',
+                border: '1px solid #d1d5db',
+                background: params.viewMode === v ? '#1e40af' : 'white',
+                color: params.viewMode === v ? 'white' : '#111827',
+                borderRadius: 4,
+              }}
+            >
+              {v === '3d' ? '3D (rotatable)' : '2D (top-down)'}
+            </button>
+          ))}
+        </div>
+        <label style={checkboxRow}>
+          <input
+            type="checkbox"
+            checked={params.showSurface}
+            onChange={e => onChange({ showSurface: e.target.checked })}
+          />
+          <span style={{ marginLeft: 8 }}>Show utility surface (the coloured hill)</span>
+        </label>
+        <div style={hint}>
+          2D + hide-surface gives you the familiar textbook picture;
+          flip back to 3D with the hill on to see where it came from.
+        </div>
+      </div>
+
       {/* Mode selector */}
       <div style={section}>
         <div style={header}>Mode</div>

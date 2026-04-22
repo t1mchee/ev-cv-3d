@@ -78,6 +78,10 @@ export interface Params {
   gridSize: number;
   extent: number;
 
+  // view
+  viewMode: '3d' | '2d';   // 2d snaps the camera to a top-down orthographic shot
+  showSurface: boolean;    // hide the coloured hill to step back toward the 2D picture
+
   // per-mode options
   surface: SurfaceOpts;
   slutsky: SlutskyOpts;
@@ -97,6 +101,8 @@ export const defaultParams: Params = {
   income: 100,
   gridSize: 60,
   extent: 100,
+  viewMode: '3d',
+  showSurface: true,
   surface: {
     showBudgetPlane: true,
     showContourFloor: true,
