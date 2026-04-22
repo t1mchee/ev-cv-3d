@@ -206,8 +206,11 @@ export default function Controls({ params, onChange }: Props) {
       <div style={section}>
         <div style={header}>Chart chrome</div>
         <label style={label}>Grid resolution: {params.gridSize}</label>
-        <input type="range" min={30} max={120} step={5} value={params.gridSize}
+        <input type="range" min={10} max={120} step={2} value={params.gridSize}
           onChange={e => onChange({ gridSize: parseInt(e.target.value, 10) })} style={slider} />
+        <div style={hint}>
+          Low values make the surface facets visible; 60+ looks perfectly smooth.
+        </div>
       </div>
     </div>
   );
@@ -244,7 +247,7 @@ function SurfacePanel({ params, onChange }: Props) {
         checked={o.showOptimalBundle}
         onToggle={() => set({ showOptimalBundle: !o.showOptimalBundle })} />
       <label style={{ ...label, marginTop: 8 }}>IC count: {o.isolineCount}</label>
-      <input type="range" min={3} max={20} step={1} value={o.isolineCount}
+      <input type="range" min={0} max={20} step={1} value={o.isolineCount}
         onChange={e => set({ isolineCount: parseInt(e.target.value, 10) })} style={slider} />
     </div>
   );
