@@ -10,7 +10,16 @@ interface Props {
 const MODES: { key: Mode; label: string; hint: React.ReactNode }[] = [
   { key: 'surface', label: '1. Surface', hint: 'The utility hill plus the indifference-curve family.' },
   {
-    key: 'slutsky', label: '2. Slutsky',
+    key: 'constrained', label: '2. Constrained maximum',
+    hint: (
+      <MathSpan>
+        {'The budget line is a vertical slice of the hill; the peak of that slice is \\(A^\\star\\), '
+          + 'and the IC at that height is exactly tangent to the budget plane.'}
+      </MathSpan>
+    ),
+  },
+  {
+    key: 'slutsky', label: '3. Slutsky',
     hint: (
       <MathSpan>
         {'Substitution is a slide along a contour of \\(U_0\\); income is a drop to the \\(U_1\\) contour.'}
@@ -18,7 +27,7 @@ const MODES: { key: Mode; label: string; hint: React.ReactNode }[] = [
     ),
   },
   {
-    key: 'hicksian', label: '3. Hicksian',
+    key: 'hicksian', label: '4. Hicksian',
     hint: (
       <MathSpan>
         {'Hold \\(\\bar U\\) fixed; watch the bundle slide along the contour as \\(p_1\\) varies.'}
@@ -26,7 +35,7 @@ const MODES: { key: Mode; label: string; hint: React.ReactNode }[] = [
     ),
   },
   {
-    key: 'marshallian', label: '4. Marshallian',
+    key: 'marshallian', label: '5. Marshallian',
     hint: (
       <MathSpan>
         {'\\(A^\\star\\) traces a trajectory on the surface as \\(p_1\\) or \\(m\\) varies.'}
@@ -34,7 +43,7 @@ const MODES: { key: Mode; label: string; hint: React.ReactNode }[] = [
     ),
   },
   {
-    key: 'ordinality', label: '5. Ordinality',
+    key: 'ordinality', label: '6. Ordinality',
     hint: (
       <MathSpan>
         {'Monotonic transformations \\(f(U)\\) reshape the hill but leave the contours unchanged.'}
@@ -42,7 +51,7 @@ const MODES: { key: Mode; label: string; hint: React.ReactNode }[] = [
     ),
   },
   {
-    key: 'evcv', label: '6. EV / CV',
+    key: 'evcv', label: '7. EV / CV',
     hint: (
       <MathSpan>
         {'Four parallel budget curtains; income-axis gaps between them equal \\(EV\\) and \\(CV\\).'}
@@ -221,6 +230,7 @@ export default function Controls({ params, onChange }: Props) {
 
       {/* Mode-specific panels */}
       {params.mode === 'surface' && <SurfacePanel params={params} onChange={onChange} />}
+      {params.mode === 'constrained' && <ConstrainedPanel params={params} onChange={onChange} />}
       {params.mode === 'slutsky' && <SlutskyPanel params={params} onChange={onChange} />}
       {params.mode === 'hicksian' && <HicksianPanel params={params} onChange={onChange} />}
       {params.mode === 'marshallian' && <MarshallianPanel params={params} onChange={onChange} />}
@@ -273,6 +283,38 @@ function SurfacePanel({ params, onChange }: Props) {
       <label style={{ ...label, marginTop: 8 }}>IC count: {o.isolineCount}</label>
       <input type="range" min={0} max={20} step={1} value={o.isolineCount}
         onChange={e => set({ isolineCount: parseInt(e.target.value, 10) })} style={slider} />
+    </div>
+  );
+}
+
+function ConstrainedPanel({ params, onChange }: Props) {
+  const o = params.constrained;
+  const set = (patch: Partial<typeof o>) => onChange({ constrained: { ...o, ...patch } });
+  return (
+    <div style={section}>
+      <div style={header}>Constrained maximum</div>
+      <Toggle labelNode={<>Slice curve (<Tex>{'U'}</Tex> along the budget)</>}
+        checked={o.showSliceCurve} onToggle={() => set({ showSliceCurve: !o.showSliceCurve })} />
+      <Toggle labelNode={<>Peak <Tex>{'A^\\star'}</Tex> + stem to floor</>}
+        checked={o.showPeak} onToggle={() => set({ showPeak: !o.showPeak })} />
+      <Toggle labelNode={<>Tangent IC at <Tex>{'U^\\star'}</Tex></>}
+        checked={o.showTangentIC} onToggle={() => set({ showTangentIC: !o.showTangentIC })} />
+      <Toggle labelNode="Other contours (green below U*, grey above)"
+        checked={o.showOtherICs} onToggle={() => set({ showOtherICs: !o.showOtherICs })} />
+      {o.showOtherICs && (
+        <>
+          <label style={{ ...label, marginTop: 8 }}>Other-IC count: {o.otherICCount}</label>
+          <input type="range" min={0} max={6} step={1} value={o.otherICCount}
+            onChange={e => set({ otherICCount: parseInt(e.target.value, 10) })} style={slider} />
+        </>
+      )}
+      <div style={hint}>
+        <MathSpan>
+          {'The green contours lie below \\(U^\\star\\); any bundle on them is feasible but '
+            + 'suboptimal. The grey ones are above \\(U^\\star\\) and cannot be afforded. '
+            + 'The red IC is tangent to the budget plane at the peak of the slice.'}
+        </MathSpan>
+      </div>
     </div>
   );
 }

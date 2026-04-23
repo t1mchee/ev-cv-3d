@@ -95,6 +95,9 @@ export default function UtilitySurface({ params, onChange }: Props) {
       case 'surface':
         renderSurfaceMode(traces, params, zMax, bundle);
         break;
+      case 'constrained':
+        renderConstrained(traces, params, zMax, bundle);
+        break;
       case 'slutsky':
         renderSlutsky(traces, params);
         break;
@@ -176,6 +179,7 @@ function titleFor(p: Params): string {
   const base = p.utilityType === 'cobb-douglas' ? 'Cobb-Douglas' : 'CES';
   switch (p.mode) {
     case 'surface': return `Utility surface: ${base}`;
+    case 'constrained': return 'Constrained maximum: the budget slice and its peak';
     case 'slutsky': return `Slutsky decomposition: ${base}`;
     case 'hicksian': return 'Hicksian demand: bundle slides along contour';
     case 'marshallian':
@@ -288,6 +292,96 @@ function renderSurfaceMode(
       type: 'scatter3d', mode: 'markers',
       x: [bundle.x1], y: [bundle.x2], z: [0],
       marker: { size: 4, color: COLOR.postTax },
+      showlegend: false, hoverinfo: 'skip',
+    });
+  }
+}
+
+// --------- Constrained maximum ---------
+// Show the budget line as a VERTICAL SLICE through the utility hill. The curve
+// where the slice meets the hill is U(x1(t), x2(t)) as t walks along the budget.
+// Its maximum is the Marshallian optimum A*, and the IC through A* is exactly
+// tangent to the budget plane at that point. That tangency IS the first-order
+// condition of the constrained problem.
+function renderConstrained(
+  traces: unknown[], p: Params, zMax: number, bundle: { x1: number; x2: number; u: number },
+): void {
+  const o = p.constrained;
+  const xEnd = p.income / p.p1;
+  const yStart = p.income / p.p2;
+
+  // Sample the slice: points along the budget line, lifted to z = U(x1, x2).
+  const N = 120;
+  const xs: number[] = [], ys: number[] = [], zs: number[] = [];
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    const x1 = t * xEnd;
+    const x2 = yStart - (yStart / xEnd) * x1;
+    xs.push(x1); ys.push(x2);
+    zs.push(utility(x1, x2, p.utilityType, p.alpha, p.rho));
+  }
+
+  if (o.showSliceCurve) {
+    // Bold red curve riding the hill along the budget line.
+    traces.push({
+      type: 'scatter3d', mode: 'lines',
+      x: xs, y: ys, z: zs,
+      line: { color: COLOR.postTax, width: 7 },
+      name: 'U along the budget',
+      hovertemplate: 'x\u2081=%{x:.2f}<br>x\u2082=%{y:.2f}<br>U=%{z:.2f}<extra></extra>',
+    });
+    // Floor projection (the 2D budget line).
+    traces.push({
+      type: 'scatter3d', mode: 'lines',
+      x: [0, xEnd], y: [yStart, 0], z: [0, 0],
+      line: { color: COLOR.postTax, width: 3, dash: 'dot' },
+      showlegend: false, hoverinfo: 'skip',
+    });
+  }
+
+  // A fainter budget curtain (the vertical plane containing the slice).
+  renderBudgetCurtain(traces, p.p1, p.p2, p.income, zMax, COLOR.compensated, 0.12);
+
+  // Other contours for context: a few below U* (feasible, interior to the
+  // budget) and a few above (infeasible, floating above the slice).
+  if (o.showOtherICs && o.otherICCount > 0) {
+    const step = bundle.u / (o.otherICCount + 1);
+    const below: number[] = [];
+    for (let k = 1; k <= o.otherICCount; k++) below.push(k * step);
+    renderIsolinesAt(traces, p, below, 'rgba(16,185,129,0.75)', 2, true);
+
+    const topStep = (zMax * 0.95 - bundle.u) / (o.otherICCount + 1);
+    const above: number[] = [];
+    for (let k = 1; k <= o.otherICCount; k++) above.push(bundle.u + k * topStep);
+    renderIsolinesAt(traces, p, above, 'rgba(156,163,175,0.7)', 2, true);
+  }
+
+  if (o.showTangentIC) {
+    // Bright red IC at U*, both on the surface and on the floor.
+    renderIsolinesAt(traces, p, [bundle.u], COLOR.postTax, 5, true);
+    renderIsolinesAt(traces, p, [bundle.u], COLOR.postTax, 2, false);
+  }
+
+  if (o.showPeak) {
+    traces.push({
+      type: 'scatter3d', mode: 'markers+text',
+      x: [bundle.x1], y: [bundle.x2], z: [bundle.u],
+      marker: { size: 7, color: COLOR.postTax },
+      text: ['A*'], textposition: 'top center',
+      textfont: { size: 14, color: COLOR.postTax },
+      hovertemplate: `A* = peak of slice<br>x\u2081=%{x:.2f}<br>x\u2082=%{y:.2f}<br>U=${bundle.u.toFixed(2)}<extra></extra>`,
+    });
+    // Stem down to the floor so the 2D bundle is explicit.
+    traces.push({
+      type: 'scatter3d', mode: 'lines',
+      x: [bundle.x1, bundle.x1], y: [bundle.x2, bundle.x2], z: [0, bundle.u],
+      line: { color: COLOR.postTax, width: 3, dash: 'dot' },
+      showlegend: false, hoverinfo: 'skip',
+    });
+    traces.push({
+      type: 'scatter3d', mode: 'markers',
+      x: [bundle.x1], y: [bundle.x2], z: [0],
+      marker: { size: 5, color: COLOR.postTax },
       showlegend: false, hoverinfo: 'skip',
     });
   }

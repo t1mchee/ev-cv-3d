@@ -2,6 +2,7 @@ export type UtilityType = 'cobb-douglas' | 'ces';
 
 export type Mode =
   | 'surface'       // just the utility hill + IC family
+  | 'constrained'   // budget is a vertical slice; optimum is the peak of that slice curve
   | 'slutsky'       // substitution (slide) vs income (drop) decomposition
   | 'hicksian'      // H(p, U̅) traced as the bundle slides along a contour
   | 'marshallian'   // x(p,m) or Engel curve traced as bundle moves over surface
@@ -16,6 +17,14 @@ export interface SurfaceOpts {
   showIsolines: boolean;
   isolineCount: number;
   showOptimalBundle: boolean;
+}
+
+export interface ConstrainedOpts {
+  showSliceCurve: boolean;    // U along the budget line, lifted to 3D
+  showPeak: boolean;          // A* marker at the max of the slice
+  showTangentIC: boolean;     // the IC through A*
+  showOtherICs: boolean;      // a few ICs below and above U* for context
+  otherICCount: number;
 }
 
 export interface SlutskyOpts {
@@ -84,6 +93,7 @@ export interface Params {
 
   // per-mode options
   surface: SurfaceOpts;
+  constrained: ConstrainedOpts;
   slutsky: SlutskyOpts;
   hicksian: HicksianOpts;
   marshallian: MarshallianOpts;
@@ -109,6 +119,13 @@ export const defaultParams: Params = {
     showIsolines: true,
     isolineCount: 10,
     showOptimalBundle: true,
+  },
+  constrained: {
+    showSliceCurve: true,
+    showPeak: true,
+    showTangentIC: true,
+    showOtherICs: true,
+    otherICCount: 3,
   },
   slutsky: {
     t1: 0.5,
