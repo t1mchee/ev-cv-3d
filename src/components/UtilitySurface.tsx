@@ -400,6 +400,43 @@ function renderConstrained(
     renderIsolinesAt(traces, p, [bundle.u], COLOR.postTax, 2, false);
   }
 
+  // Slider bundle on the budget line: a draggable point whose IC reveals
+  // which utility level any deviation from A* would leave you at. As the
+  // slider moves, the IC rises to meet U* only at the tangency.
+  if (o.showSliderIC) {
+    const t = Math.max(0, Math.min(1, o.sliderT));
+    const sx1 = t * xEnd;
+    const sx2 = yStart - (yStart / xEnd) * sx1;
+    const sU = utility(sx1, sx2, p.utilityType, p.alpha, p.rho);
+
+    renderIsolinesAt(traces, p, [sU], 'rgba(239,68,68,0.45)', 3, true);
+    renderIsolinesAt(traces, p, [sU], 'rgba(239,68,68,0.35)', 1.5, false);
+
+    // Marker on the budget line at the slider position (both at z=sU and on floor)
+    traces.push({
+      type: 'scatter3d', mode: 'markers+text',
+      x: [sx1], y: [sx2], z: [sU],
+      marker: { size: 6, color: 'rgba(239,68,68,0.9)' },
+      text: [`U=${sU.toFixed(2)}`], textposition: 'top center',
+      textfont: { size: 12, color: 'rgba(239,68,68,0.9)' },
+      hovertemplate: `Slider bundle<br>x\u2081=${sx1.toFixed(2)}<br>x\u2082=${sx2.toFixed(2)}<br>U=${sU.toFixed(2)}<extra></extra>`,
+      showlegend: false,
+    });
+    // Dotted stem down to floor
+    traces.push({
+      type: 'scatter3d', mode: 'lines',
+      x: [sx1, sx1], y: [sx2, sx2], z: [0, sU],
+      line: { color: 'rgba(239,68,68,0.6)', width: 2, dash: 'dot' },
+      showlegend: false, hoverinfo: 'skip',
+    });
+    traces.push({
+      type: 'scatter3d', mode: 'markers',
+      x: [sx1], y: [sx2], z: [0],
+      marker: { size: 4, color: 'rgba(239,68,68,0.6)' },
+      showlegend: false, hoverinfo: 'skip',
+    });
+  }
+
   if (o.showPeak) {
     traces.push({
       type: 'scatter3d', mode: 'markers+text',

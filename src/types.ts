@@ -25,6 +25,8 @@ export interface ConstrainedOpts {
   showTangentIC: boolean;     // the IC through A*
   showOtherICs: boolean;      // a few ICs below and above U* for context
   otherICCount: number;
+  sliderT: number;            // 0..1 position along the budget line
+  showSliderIC: boolean;      // light IC through the slider bundle
 }
 
 export interface SlutskyOpts {
@@ -130,6 +132,8 @@ export const defaultParams: Params = {
     showTangentIC: true,
     showOtherICs: true,
     otherICCount: 3,
+    sliderT: 0.5,
+    showSliderIC: true,
   },
   slutsky: {
     t1: 0.5,

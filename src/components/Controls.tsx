@@ -317,6 +317,28 @@ function ConstrainedPanel({ params, onChange }: Props) {
             onChange={e => set({ otherICCount: parseInt(e.target.value, 10) })} style={slider} />
         </>
       )}
+
+      <div style={{ marginTop: 14, paddingTop: 10, borderTop: '1px solid #e5e7eb' }}>
+        <Toggle labelNode="Slider bundle + its IC (the deviation probe)"
+          checked={o.showSliderIC} onToggle={() => set({ showSliderIC: !o.showSliderIC })} />
+        {o.showSliderIC && (
+          <>
+            <label style={{ ...label, marginTop: 8 }}>
+              Position along budget <Tex>{'t'}</Tex>: {o.sliderT.toFixed(2)}
+            </label>
+            <input type="range" min={0.02} max={0.98} step={0.01} value={o.sliderT}
+              onChange={e => set({ sliderT: parseFloat(e.target.value) })} style={slider} />
+            <div style={hint}>
+              <MathSpan>
+                {'Drag the slider to move a candidate bundle along the budget line. Its IC '
+                  + 'rises to meet \\(U^\\star\\) only at the tangency; everywhere else, the IC '
+                  + 'sits strictly below \\(U^\\star\\), so any deviation is suboptimal.'}
+              </MathSpan>
+            </div>
+          </>
+        )}
+      </div>
+
       <div style={hint}>
         <MathSpan>
           {'The green contours lie below \\(U^\\star\\); any bundle on them is feasible but '
