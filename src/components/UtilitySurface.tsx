@@ -33,13 +33,25 @@ const COLOR = {
 export default function UtilitySurface({ params, onChange }: Props) {
   const divRef = useRef<HTMLDivElement>(null);
 
-  // Keep a ref to the latest viewMode so the plotly_relayout event handler
-  // (registered once) can read it without going stale.
+  // Keep refs to the latest viewMode / onChange so the plotly_relayout event
+  // handler (registered once) can read them without going stale.
   const viewModeRef = useRef(params.viewMode);
   viewModeRef.current = params.viewMode;
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
   const relayoutRegistered = useRef(false);
+
+  // Track the last manualViewVersion we applied a camera for. Start at -1 so
+  // the first render always applies the default camera; later renders only
+  // reapply when the user clicks the switch (bumping manualViewVersion).
+  // Auto-flips from a drag leave manualViewVersion unchanged, so the camera
+  // key is omitted from the layout and Plotly preserves whatever the user
+  // is already dragging.
+  const lastAppliedVersion = useRef<number>(-1);
+  // Also track the last viewMode so we can force a camera reset when the
+  // *mode* changes (even if manualViewVersion is the same, which happens on
+  // programmatic toggles during development and in StrictMode double-runs).
+  const lastAppliedViewMode = useRef<'2d' | '3d' | null>(null);
 
   useEffect(() => {
     if (!divRef.current) return;
@@ -135,21 +147,47 @@ export default function UtilitySurface({ params, onChange }: Props) {
     // always derived from the (possibly transformed) raw surface data.
     const zRange: [number, number] = [0, Math.max(1, zMax * 1.1)];
 
+    // Camera logic:
+    //   * viewMode === '2d' always snaps to top-down.
+    //   * First render OR manual toggle (manualViewVersion bumped): use default camera3D.
+    //   * Auto-flip from a drag: keep the camera the user is currently dragging,
+    //     which we read from Plotly's internal layout to include it explicitly.
+    const versionChanged = lastAppliedVersion.current !== params.manualViewVersion;
+    const firstRender = lastAppliedViewMode.current === null;
+    lastAppliedVersion.current = params.manualViewVersion;
+    lastAppliedViewMode.current = params.viewMode;
+    type Camera = typeof camera2D;
+    let cameraForLayout: Camera;
+    if (params.viewMode === '2d') {
+      cameraForLayout = camera2D;
+    } else if (firstRender || versionChanged) {
+      cameraForLayout = camera3D;
+    } else {
+      // Preserve: pull the current camera out of Plotly's internal layout so
+      // the React-driven relayout does not reset it.
+      const current = (divRef.current as unknown as {
+        _fullLayout?: { scene?: { camera?: Camera } };
+      })?._fullLayout?.scene?.camera;
+      cameraForLayout = current || camera3D;
+    }
+
+    const sceneLayout: Record<string, unknown> = {
+      xaxis: { title: { text: 'x\u2081' }, range: [0, params.extent], gridcolor: '#e5e7eb' },
+      yaxis: { title: { text: 'x\u2082' }, range: [0, params.extent], gridcolor: '#e5e7eb' },
+      zaxis: {
+        title: { text: params.mode === 'ordinality' ? 'f(U)' : 'U(x\u2081, x\u2082)' },
+        range: zRange,
+        gridcolor: '#e5e7eb',
+        visible: params.viewMode === '3d',
+      },
+      aspectmode: 'cube',
+      camera: cameraForLayout,
+    };
+
     const layout = {
       title: { text: titleFor(params), font: { size: 16 } },
       margin: { l: 0, r: 0, b: 0, t: 40 },
-      scene: {
-        xaxis: { title: { text: 'x\u2081' }, range: [0, params.extent], gridcolor: '#e5e7eb' },
-        yaxis: { title: { text: 'x\u2082' }, range: [0, params.extent], gridcolor: '#e5e7eb' },
-        zaxis: {
-          title: { text: params.mode === 'ordinality' ? 'f(U)' : 'U(x\u2081, x\u2082)' },
-          range: zRange,
-          gridcolor: '#e5e7eb',
-          visible: params.viewMode === '3d',
-        },
-        camera: params.viewMode === '2d' ? camera2D : camera3D,
-        aspectmode: 'cube',
-      },
+      scene: sceneLayout,
       paper_bgcolor: '#ffffff',
     };
 

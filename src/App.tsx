@@ -51,7 +51,8 @@ export default function App() {
             <MathSpan>
               {'The coloured hill is \\(U(x_1, x_2)\\). Horizontal slices are indifference curves, '
                 + 'the contours of that same hill. The red dot is the utility-maximising bundle '
-                + 'on the budget plane; its projection on the floor is the standard 2D optimum.'}
+                + 'on the budget plane; its projection on the floor is the standard '
+                + '\\(\\mathbb{R}^2\\) optimum.'}
             </MathSpan>
           </div>
         </div>
@@ -70,7 +71,9 @@ export default function App() {
       </div>
 
       <footer style={{ padding: 16, textAlign: 'center', fontSize: 12, color: '#6b7280' }}>
-        Companion to the 2D EV / CV / DWL visualisation.
+        <MathSpan>
+          {'Companion to the \\(\\mathbb{R}^2\\) EV / CV / DWL visualisation.'}
+        </MathSpan>
       </footer>
     </div>
   );

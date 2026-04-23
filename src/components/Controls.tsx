@@ -94,7 +94,10 @@ export default function Controls({ params, onChange }: Props) {
       <div style={section}>
         <div style={header}>View</div>
         <div
-          onClick={() => onChange({ viewMode: params.viewMode === '3d' ? '2d' : '3d' })}
+          onClick={() => onChange({
+            viewMode: params.viewMode === '3d' ? '2d' : '3d',
+            manualViewVersion: params.manualViewVersion + 1,
+          })}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -106,7 +109,9 @@ export default function Controls({ params, onChange }: Props) {
             fontWeight: 500,
           }}
         >
-          <span style={{ color: params.viewMode === '2d' ? '#1e40af' : '#9ca3af' }}>2D</span>
+          <span style={{ color: params.viewMode === '2d' ? '#1e40af' : '#9ca3af' }}>
+            <Tex>{'\\mathbb{R}^2'}</Tex>
+          </span>
           <div
             style={{
               position: 'relative',
@@ -131,7 +136,9 @@ export default function Controls({ params, onChange }: Props) {
               }}
             />
           </div>
-          <span style={{ color: params.viewMode === '3d' ? '#1e40af' : '#9ca3af' }}>3D</span>
+          <span style={{ color: params.viewMode === '3d' ? '#1e40af' : '#9ca3af' }}>
+            <Tex>{'\\mathbb{R}^3'}</Tex>
+          </span>
         </div>
         <label style={checkboxRow}>
           <input
@@ -142,9 +149,11 @@ export default function Controls({ params, onChange }: Props) {
           <span style={{ marginLeft: 8 }}>Show utility surface (the coloured hill)</span>
         </label>
         <div style={hint}>
-          2D plus hide-surface gives the familiar textbook picture;
-          flip back to 3D with the hill on to see where it came from.
-          Rotating the scene auto-switches back to 3D.
+          <MathSpan>
+            {'\\(\\mathbb{R}^2\\) plus hide-surface gives the familiar textbook picture; '
+              + 'flip back to \\(\\mathbb{R}^3\\) with the hill on to see where it came from. '
+              + 'Rotating the scene auto-switches to \\(\\mathbb{R}^3\\) without resetting your camera.'}
+          </MathSpan>
         </div>
       </div>
 

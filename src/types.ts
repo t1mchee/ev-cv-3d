@@ -88,8 +88,11 @@ export interface Params {
   extent: number;
 
   // view
-  viewMode: '3d' | '2d';   // 2d snaps the camera to a top-down orthographic shot
-  showSurface: boolean;    // hide the coloured hill to step back toward the 2D picture
+  viewMode: '3d' | '2d';         // 2d snaps the camera to a top-down orthographic shot
+  showSurface: boolean;          // hide the coloured hill to step back toward the 2D picture
+  manualViewVersion: number;     // bumped when the user clicks the switch, not when
+                                 // the view auto-flips from a drag. Lets the chart
+                                 // preserve the dragged camera across an auto-flip.
 
   // per-mode options
   surface: SurfaceOpts;
@@ -113,6 +116,7 @@ export const defaultParams: Params = {
   extent: 100,
   viewMode: '3d',
   showSurface: true,
+  manualViewVersion: 0,
   surface: {
     showBudgetPlane: true,
     showContourFloor: true,
