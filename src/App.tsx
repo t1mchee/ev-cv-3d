@@ -46,7 +46,7 @@ export default function App() {
             padding: 12,
           }}
         >
-          <UtilitySurface params={params} />
+          <UtilitySurface params={params} onChange={onChange} />
           <div style={{ fontSize: 12, color: '#6b7280', padding: '8px 12px 4px', lineHeight: 1.5 }}>
             <MathSpan>
               {'The coloured hill is \\(U(x_1, x_2)\\). Horizontal slices are indifference curves, '
@@ -56,7 +56,15 @@ export default function App() {
           </div>
         </div>
 
-        <aside>
+        <aside
+          style={{
+            maxHeight: 'calc(100vh - 40px)',
+            overflowY: 'auto',
+            position: 'sticky',
+            top: 20,
+            paddingRight: 4,
+          }}
+        >
           <Controls params={params} onChange={onChange} />
         </aside>
       </div>

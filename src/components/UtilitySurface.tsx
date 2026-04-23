@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react';
 // @ts-expect-error - plotly.js-dist-min ships no bundled types
 import Plotly from 'plotly.js-dist-min';
 import type { Params } from '../types';
+
+type PlotlyDiv = HTMLDivElement & { on?: (event: string, cb: (ev: unknown) => void) => void };
 import {
   sampleSurface,
   applyTransformation,
@@ -13,7 +15,10 @@ import {
   utility,
 } from '../utility';
 
-interface Props { params: Params; }
+interface Props {
+  params: Params;
+  onChange: (patch: Partial<Params>) => void;
+}
 
 const COLOR = {
   preTax: '#111827',
@@ -25,8 +30,16 @@ const COLOR = {
   ic: 'rgba(255,255,255,0.55)',
 };
 
-export default function UtilitySurface({ params }: Props) {
+export default function UtilitySurface({ params, onChange }: Props) {
   const divRef = useRef<HTMLDivElement>(null);
+
+  // Keep a ref to the latest viewMode so the plotly_relayout event handler
+  // (registered once) can read it without going stale.
+  const viewModeRef = useRef(params.viewMode);
+  viewModeRef.current = params.viewMode;
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  const relayoutRegistered = useRef(false);
 
   useEffect(() => {
     if (!divRef.current) return;
@@ -114,6 +127,11 @@ export default function UtilitySurface({ params }: Props) {
       projection: { type: 'perspective' },
     };
 
+    // Fix the z-axis range to a single value driven by the raw surface height,
+    // so toggling the hill off doesn't rescale the scene. The `_zMax` value is
+    // always derived from the (possibly transformed) raw surface data.
+    const zRange: [number, number] = [0, Math.max(1, zMax * 1.1)];
+
     const layout = {
       title: { text: titleFor(params), font: { size: 16 } },
       margin: { l: 0, r: 0, b: 0, t: 40 },
@@ -122,6 +140,7 @@ export default function UtilitySurface({ params }: Props) {
         yaxis: { title: { text: 'x\u2082' }, range: [0, params.extent], gridcolor: '#e5e7eb' },
         zaxis: {
           title: { text: params.mode === 'ordinality' ? 'f(U)' : 'U(x\u2081, x\u2082)' },
+          range: zRange,
           gridcolor: '#e5e7eb',
           visible: params.viewMode === '3d',
         },
@@ -132,7 +151,22 @@ export default function UtilitySurface({ params }: Props) {
     };
 
     const config = { displaylogo: false, responsive: true, modeBarButtonsToRemove: ['toImage'] };
-    Plotly.react(divRef.current, traces, layout, config);
+    Plotly.react(divRef.current, traces, layout, config).then(() => {
+      // Register the relayout handler once. When the user drags the scene in 2D
+      // view, Plotly fires plotly_relayout with 'scene.camera' keys; we flip
+      // back to 3D so the user sees real perspective.
+      if (relayoutRegistered.current || !divRef.current) return;
+      const div = divRef.current as PlotlyDiv;
+      if (typeof div.on !== 'function') return;
+      div.on('plotly_relayout', (ev) => {
+        const e = ev as Record<string, unknown>;
+        const cameraChanged = Object.keys(e).some(k => k.startsWith('scene.camera'));
+        if (cameraChanged && viewModeRef.current === '2d') {
+          onChangeRef.current({ viewMode: '3d' });
+        }
+      });
+      relayoutRegistered.current = true;
+    });
   }, [params]);
 
   return <div ref={divRef} style={{ width: '100%', height: 640 }} />;
@@ -476,8 +510,8 @@ function renderEVCV(traces: unknown[], p: Params, _zMax: number): void {
   if (o.showCVCurtain)
     renderBudgetCurtain(traces, q1, p.p2, mCV, zTop, '#ef4444', 0.14, 'dash');
 
-  if (o.showBundleA) dotLabel(traces, A.x1, A.x2, U0, '$A$', COLOR.preTax);
-  if (o.showBundleTildeA) dotLabel(traces, tildeA.x1, tildeA.x2, U1, '$\\tilde A$', COLOR.postTax);
+  if (o.showBundleA) dotLabel(traces, A.x1, A.x2, U0, 'A', COLOR.preTax);
+  if (o.showBundleTildeA) dotLabel(traces, tildeA.x1, tildeA.x2, U1, 'A\u0303', COLOR.postTax);
 
   if (o.showBrackets) {
     // Show the two incomes as text anchored at the y-axis intercepts of each curtain.

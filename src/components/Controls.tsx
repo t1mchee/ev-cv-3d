@@ -84,22 +84,45 @@ export default function Controls({ params, onChange }: Props) {
       {/* View controls */}
       <div style={section}>
         <div style={header}>View</div>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-          {(['3d', '2d'] as const).map(v => (
-            <button
-              key={v}
-              onClick={() => onChange({ viewMode: v })}
+        <div
+          onClick={() => onChange({ viewMode: params.viewMode === '3d' ? '2d' : '3d' })}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            marginBottom: 10,
+            cursor: 'pointer',
+            userSelect: 'none',
+            fontSize: 13,
+            fontWeight: 500,
+          }}
+        >
+          <span style={{ color: params.viewMode === '2d' ? '#1e40af' : '#9ca3af' }}>2D</span>
+          <div
+            style={{
+              position: 'relative',
+              width: 44,
+              height: 22,
+              background: params.viewMode === '3d' ? '#1e40af' : '#cbd5e1',
+              borderRadius: 11,
+              transition: 'background 160ms ease',
+            }}
+          >
+            <div
               style={{
-                flex: 1, padding: '6px 10px', fontSize: 12, cursor: 'pointer',
-                border: '1px solid #d1d5db',
-                background: params.viewMode === v ? '#1e40af' : 'white',
-                color: params.viewMode === v ? 'white' : '#111827',
-                borderRadius: 4,
+                position: 'absolute',
+                left: params.viewMode === '3d' ? 24 : 2,
+                top: 2,
+                width: 18,
+                height: 18,
+                background: 'white',
+                borderRadius: '50%',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                transition: 'left 160ms ease',
               }}
-            >
-              {v === '3d' ? '3D (rotatable)' : '2D (top-down)'}
-            </button>
-          ))}
+            />
+          </div>
+          <span style={{ color: params.viewMode === '3d' ? '#1e40af' : '#9ca3af' }}>3D</span>
         </div>
         <label style={checkboxRow}>
           <input
@@ -110,8 +133,9 @@ export default function Controls({ params, onChange }: Props) {
           <span style={{ marginLeft: 8 }}>Show utility surface (the coloured hill)</span>
         </label>
         <div style={hint}>
-          2D plus hide-surface gives you the familiar textbook picture;
+          2D plus hide-surface gives the familiar textbook picture;
           flip back to 3D with the hill on to see where it came from.
+          Rotating the scene auto-switches back to 3D.
         </div>
       </div>
 
